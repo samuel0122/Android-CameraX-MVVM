@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="dark_gray">#444444</color>
+    <color name="gray">#888888</color>
+    <color name="light_gray">#CCCCCC</color>
+    <color name="white">#FFFFFF</color>
+
+    <color name="red">#FF0000</color>
+    <color name="yellow">#FFFF00</color>
+    <color name="orange">#FF8800</color>
+    <color name="green">#00FF00</color>
+    <color name="cian">#00FFFF</color>
+    <color name="blue">#0000FF</color>
+    <color name="magenta">#FF00FF</color>
+
+    <!-- Colores principales -->
+    <color name="colorPrimary">#1976D2</color>
+    <color name="colorPrimaryVariant">#1565C0</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <!-- Fondo y superficie -->
+    <color name="colorWindowBackground">#E3F2FD</color> <!-- Fondo azul muy clarito -->
+    <color name="colorSurface">#F5F5F5</color> <!-- Superficie gris clara -->
+    <color name="colorOnBackground">#212121</color> <!-- Texto oscuro sobre fondo claro -->
+    <color name="colorOnSurface">#212121</color> <!-- Texto oscuro sobre superficie clara -->
+
+
 </resources>

@@ -18,7 +18,8 @@ navigation = "2.8.3" # Navigation
 room = "2.6.1" # Room
 cameraX = "1.4.0" # CameraX
 easypermissions = "1.0.0" # EasyPermissions
-glide = "4.16.0" # Glide
+glide = "4.16.0"
+legacySupportV4 = "1.0.0" # Glide
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,6 +77,7 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 
 # EasyPermissions
 easypermissions-ktx = { group = "com.vmadalin", name = "easypermissions-ktx", version.ref = "easypermissions" }
+androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
