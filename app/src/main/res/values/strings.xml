@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">CameraX-MVVM</string>
+
+    <string name="file_provider_authorities">${applicationId}.fileprovider</string>
+
+    <string name="ok">OK</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Permissions -->
+    <string name="cameraPermissionText">Camera permission is needed to access to the camera.</string>
+
+    <!-- Camera View -->
+    <string name="camera_permission_granted">Camera permission granted!</string>
+    <string name="camera_permission_request_title">Camera permission required</string>
+    <string name="camera_permission_request">Camera permission is required for the app to function properly. Please open the app settings to modify permissions.</string>
 </resources>

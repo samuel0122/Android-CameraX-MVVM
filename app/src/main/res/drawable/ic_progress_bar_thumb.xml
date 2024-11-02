@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Capa del círculo vacío -->
+    <item>
+        <shape android:shape="oval">
+            <size android:width="24dp" android:height="24dp" />
+            <solid android:color="@android:color/transparent" />
+            <stroke android:width="2dp" android:color="@color/gray" />
+        </shape>
+    </item>
+
+    <item android:id="@+id/fill">
+        <clip>
+            <shape android:shape="oval">
+                <size android:width="24dp" android:height="24dp" />
+                <solid android:color="@color/white" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

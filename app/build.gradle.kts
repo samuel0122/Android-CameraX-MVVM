@@ -103,4 +103,8 @@ dependencies {
 
     // EasyPermissions
     implementation(libs.easypermissions.ktx)
+
+    // Preferences DataStore
+    implementation(libs.datastore.preferences)
+    implementation(libs.datastore.preferences.core)
 }
