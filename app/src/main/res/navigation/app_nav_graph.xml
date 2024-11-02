@@ -8,5 +8,14 @@
         android:id="@+id/mainPageFragment"
         android:name="es.ua.eps.camerax_mvvm.ui.mainPage.view.MainPageFragment"
         android:label="CameraX MVVM"
-        tools:layout="@layout/fragment_main_page" />
+        tools:layout="@layout/fragment_main_page" >
+        <action
+            android:id="@+id/action_mainPageFragment_to_cameraFragment"
+            app:destination="@id/cameraFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="es.ua.eps.camerax_mvvm.ui.camera.view.CameraFragment"
+        android:label="fragment_camera"
+        tools:layout="@layout/fragment_abstract_camera" />
 </navigation>

@@ -20,6 +20,7 @@ cameraX = "1.4.0" # CameraX
 easypermissions = "1.0.0" # EasyPermissions
 glide = "4.16.0"
 legacySupportV4 = "1.0.0" # Glide
+datastore = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -78,6 +79,10 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 # EasyPermissions
 easypermissions-ktx = { group = "com.vmadalin", name = "easypermissions-ktx", version.ref = "easypermissions" }
 androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
+
+# DataStore
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
