@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -9,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "es.ua.eps.camerax_mvvm"
+    namespace = "es.oliva.samuel.camerax_mvvm"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "es.ua.eps.camerax_mvvm"
+        applicationId = "es.oliva.samuel.camerax_mvvm"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -26,8 +25,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
@@ -38,7 +36,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    buildFeatures{
+    buildFeatures {
         viewBinding = true
     }
 }
