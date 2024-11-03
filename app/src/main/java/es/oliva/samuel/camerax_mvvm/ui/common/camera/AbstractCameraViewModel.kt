@@ -2,6 +2,11 @@ package es.oliva.samuel.camerax_mvvm.ui.common.camera
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.media.AudioManager
+import android.media.MediaActionSound
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
@@ -23,7 +28,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 enum class CameraState {
     Live, ImageCaptured
@@ -33,7 +37,10 @@ enum class CameraFacing {
     Front, Back
 }
 
-open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
+abstract class AbstractCameraViewModel(
+    private val audioManager: AudioManager,
+    private val vibrator: Vibrator
+) : ViewModel() {
     private val _flashOn = MutableLiveData<Boolean>()
     private val _isCapturingImage = MutableLiveData<Boolean>()
     private val _cameraFacing = MutableLiveData<CameraFacing>()
@@ -52,21 +59,28 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
     val camera: Camera? get() = _camera
     val cameraProvider: ProcessCameraProvider? get() = _cameraProvider
 
-    lateinit var preview: Preview
-    lateinit var imageCapture: ImageCapture
-    lateinit var cameraSelector: CameraSelector
+    var preview: Preview? = null
+    var imageCapture: ImageCapture? = null
+    val cameraSelector: CameraSelector
+        get() = CameraSelector.Builder().requireLensFacing(lensFacing).build()
 
     private var lensFacing = CameraSelector.LENS_FACING_BACK
-    private var aspectRatio = AspectRatio.RATIO_16_9
+    private var aspectRatio = AspectRatio.RATIO_4_3
 
-    private lateinit var cameraExecutor: ExecutorService
+    private val cameraExecutor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
+    private val shutterSound = MediaActionSound().apply {
+        load(MediaActionSound.SHUTTER_CLICK)
+    }
+
+
+    private val canPlaySound: Boolean
+        get() = audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL
+    private val canVibrate: Boolean
+        get() = audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL ||
+                audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
 
     open fun onCreate() {
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
         pictureBitmap.value?.let { pictureBitmap -> _pictureBitmap.postValue(pictureBitmap) }
-
-        buildCameraSelector()
     }
 
     fun onStartCamera(rotation: Int) {
@@ -85,38 +99,38 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
     fun onDestroy() {
         cameraExecutor.shutdown()
         cameraProvider?.unbindAll()
+        shutterSound.release()
     }
 
     private fun buildPreview(rotation: Int) {
-        val resolutionSelector = ResolutionSelector.Builder().setAspectRatioStrategy(
-            AspectRatioStrategy(
-                aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                AspectRatioStrategy(
+                    aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO
+                )
             )
-        ).build()
+            .build()
 
-        preview =
-            Preview.Builder().setResolutionSelector(resolutionSelector).setTargetRotation(rotation)
-                .build()
+        preview = Preview.Builder()
+            .setResolutionSelector(resolutionSelector)
+            .setTargetRotation(rotation)
+            .build()
     }
 
     private fun buildImageCapture(rotation: Int) {
-        val resolutionSelector = ResolutionSelector.Builder().setAspectRatioStrategy(
-            AspectRatioStrategy(
-                aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                AspectRatioStrategy(
+                    aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO
+                )
             )
-        ).build()
+            .build()
 
-        imageCapture =
-            ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .setResolutionSelector(resolutionSelector).setTargetRotation(rotation).build()
-    }
-
-    private fun buildCameraSelector() {
-        cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
-    }
-
-    fun discardCapturedPage() {
-        _cameraState.postValue(CameraState.Live)
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setResolutionSelector(resolutionSelector)
+            .setTargetRotation(rotation)
+            .build()
     }
 
     fun setCameraProvider(cameraProvider: ProcessCameraProvider) {
@@ -128,7 +142,7 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
     }
 
     fun flipCamera() {
-        cameraFacing.value?.let { cameraFacing ->
+        cameraFacing.value.let { cameraFacing ->
             viewModelScope.launch {
                 when (cameraFacing) {
                     CameraFacing.Front -> {
@@ -136,13 +150,11 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
                         _cameraFacing.postValue(CameraFacing.Back)
                     }
 
-                    CameraFacing.Back -> {
+                    CameraFacing.Back, null -> {
                         lensFacing = CameraSelector.LENS_FACING_FRONT
                         _cameraFacing.postValue(CameraFacing.Front)
                     }
                 }
-
-                buildCameraSelector()
             }
         }
     }
@@ -151,10 +163,10 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             camera?.let { camera ->
                 if (camera.cameraInfo.hasFlashUnit()) {
-                    val turnFlashOn = _flashOn.value == false
+                    val isFlashOn = _flashOn.value ?: true
 
-                    camera.cameraControl.enableTorch(turnFlashOn)
-                    _flashOn.postValue(turnFlashOn)
+                    camera.cameraControl.enableTorch(!isFlashOn)
+                    _flashOn.postValue(!isFlashOn)
                 }
             }
         }
@@ -183,17 +195,20 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             val action = FocusMeteringAction.Builder(
                 point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE
-            ).setAutoCancelDuration(5, TimeUnit.SECONDS).build()
+            )
+                .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                .build()
             camera?.cameraControl?.startFocusAndMetering(action)
         }
     }
 
-    fun takePhoto() {
+    fun takePicture() {
         viewModelScope.launch {
             _isCapturingImage.postValue(true)
+            playShutterSound()
+            playVibrate()
 
-            imageCapture.takePicture(
-                cameraExecutor,
+            imageCapture?.takePicture(cameraExecutor,
                 object : ImageCapture.OnImageCapturedCallback() {
                     override fun onCaptureSuccess(image: ImageProxy) {
                         var bitmap = image.toBitmap()
@@ -219,5 +234,32 @@ open class AbstractCameraViewModel @Inject constructor() : ViewModel() {
                     }
                 })
         }
+    }
+
+    private fun playShutterSound() {
+        if (!canPlaySound) return
+
+        shutterSound.play(MediaActionSound.SHUTTER_CLICK)
+    }
+
+    private fun playVibrate() {
+        if (!canVibrate) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(
+                VibrationEffect.createOneShot(
+                    100,
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+            )
+        } else {
+            vibrator.vibrate(100)
+        }
+    }
+
+    abstract fun acceptCapturedPicture()
+
+    fun discardCapturedPicture() {
+        _cameraState.postValue(CameraState.Live)
     }
 }
