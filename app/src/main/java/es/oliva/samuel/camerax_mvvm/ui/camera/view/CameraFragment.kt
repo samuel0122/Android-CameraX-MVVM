@@ -28,8 +28,4 @@ class CameraFragment : AbstractCameraFragment() {
             if (didInsertPage) findNavController().navigateUp()
         }
     }
-
-    override fun onImageConfirmationAction() {
-        viewModel.insertCapturedPage()
-    }
 }

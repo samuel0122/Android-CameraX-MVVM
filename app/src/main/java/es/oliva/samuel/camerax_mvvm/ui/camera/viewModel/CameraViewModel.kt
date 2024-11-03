@@ -1,5 +1,7 @@
 package es.oliva.samuel.camerax_mvvm.ui.camera.viewModel
 
+import android.media.AudioManager
+import android.os.Vibrator
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -11,8 +13,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(
-    private val saveImageUseCase: SaveImageUseCase
-) : AbstractCameraViewModel() {
+    private val saveImageUseCase: SaveImageUseCase,
+    audioManager: AudioManager,
+    vibrator: Vibrator
+) : AbstractCameraViewModel(audioManager, vibrator) {
 
     private val _didInsertPage = MutableLiveData<Boolean>()
 
@@ -23,7 +27,7 @@ class CameraViewModel @Inject constructor(
         _didInsertPage.postValue(false)
     }
 
-    fun insertCapturedPage() {
+    override fun acceptCapturedPicture() {
         viewModelScope.launch {
             pictureBitmap.value?.let { pictureBitmap ->
                 if (saveImageUseCase(pictureBitmap)) _didInsertPage.postValue(true)

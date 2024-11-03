@@ -25,8 +25,6 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
 
     protected lateinit var binding: FragmentAbstractCameraBinding
 
-    protected abstract fun onImageConfirmationAction()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -44,10 +42,10 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
             btnCloseCamera.setOnClickListener { findNavController().navigateUp() }
             btnFlipCamera.setOnClickListener { viewModel.flipCamera() }
             btnToggleFlash.setOnClickListener { viewModel.toggleFlash() }
-            btnShotPhoto.setOnClickListener { viewModel.takePhoto() }
+            btnShotPhoto.setOnClickListener { viewModel.takePicture() }
 
-            btnDiscardPhoto.setOnClickListener { viewModel.discardCapturedPage() }
-            btnConfirmPhoto.setOnClickListener { onImageConfirmationAction() }
+            btnDiscardPhoto.setOnClickListener { viewModel.discardCapturedPicture() }
+            btnConfirmPhoto.setOnClickListener { viewModel.acceptCapturedPicture() }
 
             clLive.visibility = View.GONE
             clPreview.visibility = View.GONE
@@ -134,7 +132,7 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
 
                 viewModel.onStartCamera(binding.pvCamera.display.rotation)
 
-                viewModel.preview.apply {
+                viewModel.preview?.apply {
                     surfaceProvider = binding.pvCamera.surfaceProvider
                 }
             }, ContextCompat.getMainExecutor(requireContext()))
@@ -156,6 +154,7 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
 
                 viewModel.setCamera(camera)
 
+                setUpExposure()
                 setUpZoomTapToFocusAndExposure()
             }
 
@@ -163,9 +162,7 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
         }
     }
 
-    private fun setUpZoomTapToFocusAndExposure() {
-        // Configuración del control de exposición
-        binding.sbExposure.setProgress(50, true)
+    private fun setUpExposure() {
         viewModel.updateExposure(binding.sbExposure.progress.toFloat() / binding.sbExposure.max.toFloat())
         binding.sbExposure.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -177,9 +174,12 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+    }
 
+    private fun setUpZoomTapToFocusAndExposure() {
         // Configuración del detector de gestos para el zoom
-        val scaleGestureDetector = ScaleGestureDetector(requireContext(),
+        val scaleGestureDetector = ScaleGestureDetector(
+            requireContext(),
             object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
                     viewModel.updateZoom(detector.scaleFactor)
