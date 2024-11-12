@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.common.camera.AbstractCameraFragment">
+    tools:context=".ui.common.camera.AbstractVideoFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clLive"
@@ -16,12 +16,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.95" />
+            app:layout_constraintGuide_percent="0.98" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/constraint_top_guideline_horizontal_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.9" />
 
         <androidx.camera.view.PreviewView
             android:id="@+id/pvCamera"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:scaleType="fitCenter" />
 
         <es.oliva.samuel.camerax_mvvm.ui.common.components.FocusCircleView
@@ -88,8 +97,8 @@
             app:tint="@color/white" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/btnShotPhoto"
-            android:layout_width="70dp"
+            android:id="@+id/btnVideoRecord"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@drawable/bg_circular_transparent"
             android:padding="5dp"
@@ -98,8 +107,8 @@
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/ic_camera"
-            app:tint="@color/white" />
+            app:layout_constraintTop_toTopOf="@id/constraint_top_guideline_horizontal_bottom"
+            app:srcCompat="@drawable/ic_record" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -113,18 +122,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.95" />
+            app:layout_constraintGuide_percent="0.98" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/ivPage"
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/constraint_top_guideline_preview_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.9" />
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/vvPreview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:foregroundGravity="center"
-            android:scaleType="fitCenter" />
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:resize_mode="fit"
+            app:use_controller="true" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnConfirmPhoto"
-            android:layout_width="60dp"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@drawable/bg_circular_semi_black"
             android:padding="10dp"
@@ -133,12 +152,13 @@
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toStartOf="@id/btnDiscardPhoto"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/constraint_top_guideline_preview_buttons"
             app:srcCompat="@drawable/ic_check"
             app:tint="@color/white" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnDiscardPhoto"
-            android:layout_width="60dp"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@drawable/bg_circular_semi_black"
             android:padding="10dp"
@@ -147,10 +167,10 @@
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btnConfirmPhoto"
+            app:layout_constraintTop_toTopOf="@id/constraint_top_guideline_preview_buttons"
             app:srcCompat="@drawable/ic_close"
             app:tint="@color/white" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -96,6 +96,11 @@ dependencies {
     implementation(libs.camera.view)
     implementation(libs.camera.extensions)
 
+    // ExoPlayer
+    implementation(libs.media.exoplayer)
+    implementation(libs.media.exoplayer.dash)
+    implementation(libs.media.ui)
+
     // Glide
     implementation(libs.glide)
 

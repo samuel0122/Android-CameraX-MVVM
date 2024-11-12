@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -72,6 +73,13 @@ object SaveToMediaStore {
         return "${imageName}_${timeStamp}.jpeg"
     }
 
+    fun generateVideoFileName(imageName: String = "MyVideo"): String {
+        val timeStamp: String = SimpleDateFormat(
+            "yyyy-MM-dd_HH-mm-ss-SSS", Locale.US
+        ).format(System.currentTimeMillis())
+        return "${imageName}_${timeStamp}.mp4"
+    }
+
     fun generatePublicPictureUriForImage(context: Context, imageFileName: String): Uri? {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, imageFileName)
@@ -82,5 +90,35 @@ object SaveToMediaStore {
         return context.contentResolver.insert(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues
         )
+    }
+
+    fun generatePublicVideoContentValuesForVideo(videoFileName: String): ContentValues {
+        return ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, videoFileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES)
+        }
+    }
+
+    fun generatePublicVideoUriForVideo(context: Context, videoFileName: String): Uri? {
+        val contentValues = generatePublicVideoContentValuesForVideo(videoFileName)
+
+        return context.contentResolver.insert(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues
+        )
+    }
+
+    fun getFileFromUri(context: Context, uri: Uri): File? {
+        var filePath: String? = null
+        val projection = arrayOf(MediaStore.MediaColumns.DATA)
+
+        context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+                filePath = cursor.getString(columnIndex)
+            }
+        }
+
+        return filePath?.let { File(it) }
     }
 }
