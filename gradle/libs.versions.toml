@@ -21,6 +21,7 @@ easypermissions = "1.0.0" # EasyPermissions
 glide = "4.16.0"
 legacySupportV4 = "1.0.0" # Glide
 datastore = "1.1.1"
+exo-player = "1.4.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -72,6 +73,11 @@ camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", versi
 camera-video = { group = "androidx.camera", name = "camera-video", version.ref = "cameraX" }
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraX" }
 camera-extensions = { group = "androidx.camera", name = "camera-extensions", version.ref = "cameraX" }
+
+# ExoPlayer
+media-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "exo-player" }
+media-exoplayer-dash = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "exo-player" }
+media-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "exo-player" }
 
 # Glide
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }

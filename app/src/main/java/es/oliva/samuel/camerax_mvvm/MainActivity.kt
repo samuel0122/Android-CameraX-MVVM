@@ -30,10 +30,9 @@ class MainActivity : AppCompatActivity() {
         binding.toolbar.setupWithNavController(navController, appBarConfiguration)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (destination.id == R.id.cameraFragment) {
-                supportActionBar?.hide()
-            } else {
-                supportActionBar?.show()
+            when (destination.id) {
+                R.id.cameraFragment, R.id.videoFragment -> supportActionBar?.hide()
+                else -> supportActionBar?.show()
             }
         }
     }

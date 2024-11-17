@@ -1,49 +1,59 @@
 package es.oliva.samuel.camerax_mvvm.ui.common.camera
 
-import android.graphics.Bitmap
-import android.graphics.Matrix
+import android.Manifest
+import android.content.Context
 import android.media.AudioManager
 import android.media.MediaActionSound
+import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.util.Log
+import android.provider.MediaStore
+import androidx.annotation.RequiresPermission
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.MeteringPoint
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.FallbackStrategy
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.qualifiers.ApplicationContext
+import es.oliva.samuel.camerax_mvvm.core.utils.SaveToMediaStore
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-abstract class AbstractCameraViewModel(
+abstract class AbstractVideoViewModel(
+    @ApplicationContext private val context: Context,
     private val audioManager: AudioManager,
     private val vibrator: Vibrator
 ) : ViewModel() {
     private val _flashOn = MutableLiveData<Boolean>()
-    private val _isCapturingImage = MutableLiveData<Boolean>()
+    private val _isCapturingVideo = MutableLiveData<Boolean>()
     private val _cameraFacing = MutableLiveData<CameraFacing>()
-    private val _pictureBitmap = MutableLiveData<Bitmap>()
     private val _cameraState = MutableLiveData<CameraState>()
+    private val _recordedVideo = MutableLiveData<Uri>()
 
     val flashOn: LiveData<Boolean> get() = _flashOn
-    val isCapturingImage: LiveData<Boolean> get() = _isCapturingImage
+    val isCapturingVideo: LiveData<Boolean> get() = _isCapturingVideo
     val cameraFacing: LiveData<CameraFacing> get() = _cameraFacing
-    val pictureBitmap: LiveData<Bitmap> get() = _pictureBitmap
     val cameraState: LiveData<CameraState> get() = _cameraState
+    val recordedVideo: LiveData<Uri> get() = _recordedVideo
 
     private var _cameraProvider: ProcessCameraProvider? = null
     private var _camera: Camera? = null
@@ -52,7 +62,6 @@ abstract class AbstractCameraViewModel(
     val cameraProvider: ProcessCameraProvider? get() = _cameraProvider
 
     var preview: Preview? = null
-    var imageCapture: ImageCapture? = null
     val cameraSelector: CameraSelector
         get() = CameraSelector.Builder().requireLensFacing(lensFacing).build()
 
@@ -61,8 +70,12 @@ abstract class AbstractCameraViewModel(
 
     private val cameraExecutor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
     private val shutterSound = MediaActionSound().apply {
-        load(MediaActionSound.SHUTTER_CLICK)
+        load(MediaActionSound.START_VIDEO_RECORDING)
+        load(MediaActionSound.STOP_VIDEO_RECORDING)
     }
+
+    var videoCapture: VideoCapture<Recorder>? = null
+    private var recording: Recording? = null
 
     private val canPlaySound: Boolean
         get() = audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL
@@ -71,18 +84,18 @@ abstract class AbstractCameraViewModel(
                 audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
 
     open fun onCreate() {
-        pictureBitmap.value?.let { pictureBitmap -> _pictureBitmap.postValue(pictureBitmap) }
+
     }
 
     fun onStartCamera(rotation: Int) {
         viewModelScope.launch {
-            buildImageCapture(rotation)
+            buildVideoCapture()
 
             buildPreview(rotation)
 
             _cameraState.postValue(cameraState.value ?: CameraState.Live)
             _flashOn.postValue(flashOn.value ?: false)
-            _isCapturingImage.postValue(isCapturingImage.value ?: false)
+            _isCapturingVideo.postValue(isCapturingVideo.value ?: false)
             _cameraFacing.postValue(cameraFacing.value ?: CameraFacing.Back)
         }
     }
@@ -108,20 +121,19 @@ abstract class AbstractCameraViewModel(
             .build()
     }
 
-    private fun buildImageCapture(rotation: Int) {
-        val resolutionSelector = ResolutionSelector.Builder()
-            .setAspectRatioStrategy(
-                AspectRatioStrategy(
-                    aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO
-                )
-            )
+    private fun buildVideoCapture() {
+        val qualitySelector = QualitySelector.fromOrderedList(
+            listOf(Quality.UHD, Quality.FHD, Quality.HD, Quality.SD),
+            FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
+        )
+
+        val recorder = Recorder.Builder()
+            .setExecutor(cameraExecutor)
+            .setQualitySelector(qualitySelector)
+            .setAspectRatio(aspectRatio)
             .build()
 
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .setResolutionSelector(resolutionSelector)
-            .setTargetRotation(rotation)
-            .build()
+        videoCapture = VideoCapture.withOutput(recorder)
     }
 
     fun setCameraProvider(cameraProvider: ProcessCameraProvider) {
@@ -193,44 +205,59 @@ abstract class AbstractCameraViewModel(
         }
     }
 
-    fun takePicture() {
-        viewModelScope.launch {
-            _isCapturingImage.postValue(true)
-            playShutterSound()
-            playVibrate()
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    fun startRecording() {
+        videoCapture?.let { videoCapture ->
+            val outputFileName = SaveToMediaStore.generateVideoFileName()
 
-            imageCapture?.takePicture(cameraExecutor,
-                object : ImageCapture.OnImageCapturedCallback() {
-                    override fun onCaptureSuccess(image: ImageProxy) {
-                        var bitmap = image.toBitmap()
+            val contentValues =
+                SaveToMediaStore.generatePublicVideoContentValuesForVideo(outputFileName)
 
-                        if (image.imageInfo.rotationDegrees != 0) {
-                            val matrix = Matrix()
-                            matrix.postRotate(image.imageInfo.rotationDegrees.toFloat())
-                            bitmap = Bitmap.createBitmap(
-                                bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
-                            )
+            val outputOptions = MediaStoreOutputOptions.Builder(
+                context.contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            ).setContentValues(contentValues).build()
+
+
+            recording = videoCapture.output.prepareRecording(context, outputOptions)
+                .start(cameraExecutor) { event ->
+                    when (event) {
+                        is VideoRecordEvent.Start -> {
+                            playVideoStartSound()
+                            _isCapturingVideo.postValue(true)
                         }
 
-                        _pictureBitmap.postValue(bitmap)
-                        _cameraState.postValue(CameraState.ImageCaptured)
-                        _isCapturingImage.postValue(false)
+                        is VideoRecordEvent.Finalize -> {
+                            playVideoStopSound()
+                            _isCapturingVideo.postValue(false)
+                            if (!event.hasError()) {
+                                playVibrate()
+                                _recordedVideo.postValue(event.outputResults.outputUri)
+                                _cameraState.postValue(CameraState.ImageCaptured)
+                            }
+                        }
 
-                        image.close()
+                        else -> {}
                     }
-
-                    override fun onError(exception: ImageCaptureException) {
-                        _isCapturingImage.postValue(false)
-                        Log.e("CameraCapture", "Error al capturar imagen: ${exception.message}")
-                    }
-                })
+                }
         }
     }
 
-    private fun playShutterSound() {
+    fun stopRecording() {
+        videoCapture?.let {
+            recording?.stop()
+        }
+    }
+
+    private fun playVideoStartSound() {
         if (!canPlaySound) return
 
-        shutterSound.play(MediaActionSound.SHUTTER_CLICK)
+        shutterSound.play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
+    private fun playVideoStopSound() {
+        if (!canPlaySound) return
+
+        shutterSound.play(MediaActionSound.STOP_VIDEO_RECORDING)
     }
 
     private fun playVibrate() {
@@ -248,9 +275,12 @@ abstract class AbstractCameraViewModel(
         }
     }
 
-    abstract fun acceptCapturedPicture()
+    abstract fun acceptRecordedVideo()
 
-    fun discardCapturedPicture() {
-        _cameraState.postValue(CameraState.Live)
+    fun discardRecordedVideo() {
+        viewModelScope.launch {
+            recordedVideo.value?.let { videoUri -> SaveToMediaStore.deleteImage(context, videoUri) }
+            _cameraState.postValue(CameraState.Live)
+        }
     }
 }
