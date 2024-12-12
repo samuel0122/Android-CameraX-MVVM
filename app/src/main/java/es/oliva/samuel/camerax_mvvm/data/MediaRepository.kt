@@ -12,12 +12,17 @@ class MediaRepository @Inject constructor(
 ) {
     fun getLastSavedMediaUri(): Flow<Uri?> = dataPreferencesDao.fetchLastPictureUri()
 
-    fun getMediaThumbnail(uri: Uri) = mediaStorageDao.loadImage(uri)
+    fun getMediaThumbnail(uri: Uri) = mediaStorageDao.loadMediaThumbnail(uri)
 
     suspend fun saveImage(image: Bitmap): Boolean {
         return mediaStorageDao.saveImage(image)?.let { savedImageUri ->
             dataPreferencesDao.saveLastPictureUri(savedImageUri)
             true
         } ?: false
+    }
+
+    suspend fun saveVideo(videoUri: Uri): Boolean {
+        dataPreferencesDao.saveLastPictureUri(videoUri)
+        return true
     }
 }

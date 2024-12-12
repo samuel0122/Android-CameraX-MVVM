@@ -9,12 +9,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import es.oliva.samuel.camerax_mvvm.core.utils.SaveToMediaStore
+import es.oliva.samuel.camerax_mvvm.domain.SaveVideoUseCase
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class VideoPreviewViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val saveVideoUseCase: SaveVideoUseCase
 ) : ViewModel() {
     private val _recordedVideo = MutableLiveData<Uri>()
     private val _didInsertVideo = MutableLiveData<Boolean>()
@@ -31,7 +33,11 @@ class VideoPreviewViewModel @Inject constructor(
     }
 
     fun acceptRecordedVideo() {
-        _didInsertVideo.postValue(true)
+        viewModelScope.launch {
+            recordedVideo.value?.let { videoUri ->
+                if (saveVideoUseCase(videoUri)) _didInsertVideo.postValue(true)
+            }
+        }
     }
 
     fun rejectRecordedVideo() {

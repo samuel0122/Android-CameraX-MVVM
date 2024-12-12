@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -30,6 +31,20 @@ object SaveToMediaStore {
         } catch (e: IOException) {
             Log.e("loadImageAsByteArray", "IO Exception: ${e.message}")
             null
+        }
+    }
+
+    fun loadVideoThumbnailAsBitmap(context: Context, videoUri: Uri): Bitmap? {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, videoUri)
+
+            return retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        } finally {
+            retriever.release()
         }
     }
 
@@ -109,6 +124,10 @@ object SaveToMediaStore {
     }
 
     fun getFileFromUri(context: Context, uri: Uri): File? {
+        return getFilePathFromUri(context, uri)?.let { File(it) }
+    }
+
+    fun getFilePathFromUri(context: Context, uri: Uri): String? {
         var filePath: String? = null
         val projection = arrayOf(MediaStore.MediaColumns.DATA)
 
@@ -119,6 +138,6 @@ object SaveToMediaStore {
             }
         }
 
-        return filePath?.let { File(it) }
+        return filePath
     }
 }

@@ -7,4 +7,6 @@ interface MediaStorageDao {
     fun saveImage(image: Bitmap): Uri?
 
     fun loadImage(imageUri: Uri): Bitmap?
+
+    fun loadMediaThumbnail(mediaUri: Uri): Bitmap?
 }

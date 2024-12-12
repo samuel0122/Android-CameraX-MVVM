@@ -235,7 +235,6 @@ class VideoViewModel @Inject constructor(
                 context.contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             ).setContentValues(contentValues).build()
 
-
             recording = videoCapture.output.prepareRecording(context, outputOptions)
                 .start(cameraExecutor) { event ->
                     when (event) {
