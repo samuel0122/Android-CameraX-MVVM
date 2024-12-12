@@ -31,7 +31,7 @@ class MainPageFragment : Fragment() {
 
         binding.btnOpenCamera.setOnClickListener {
             findNavController().navigate(
-                MainPageFragmentDirections.actionMainPageFragmentToVideoFragment()
+                MainPageFragmentDirections.actionMainPageFragmentToOpenCameraOptionsDialog()
             )
         }
 

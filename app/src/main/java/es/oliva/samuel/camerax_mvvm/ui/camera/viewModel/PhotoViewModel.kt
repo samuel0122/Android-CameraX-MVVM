@@ -1,4 +1,4 @@
-package es.oliva.samuel.camerax_mvvm.ui.common.camera
+package es.oliva.samuel.camerax_mvvm.ui.camera.viewModel
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -20,30 +20,33 @@ import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import es.oliva.samuel.camerax_mvvm.ui.camera.CameraFacing
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-abstract class AbstractCameraViewModel(
+@HiltViewModel
+class PhotoViewModel @Inject constructor(
     private val audioManager: AudioManager,
     private val vibrator: Vibrator
 ) : ViewModel() {
     private val _flashOn = MutableLiveData<Boolean>()
     private val _isCapturingImage = MutableLiveData<Boolean>()
     private val _cameraFacing = MutableLiveData<CameraFacing>()
-    private val _pictureBitmap = MutableLiveData<Bitmap>()
-    private val _cameraState = MutableLiveData<CameraState>()
+    private val _pictureBitmap = MutableLiveData<Bitmap?>()
 
     val flashOn: LiveData<Boolean> get() = _flashOn
     val isCapturingImage: LiveData<Boolean> get() = _isCapturingImage
     val cameraFacing: LiveData<CameraFacing> get() = _cameraFacing
-    val pictureBitmap: LiveData<Bitmap> get() = _pictureBitmap
-    val cameraState: LiveData<CameraState> get() = _cameraState
+    val pictureBitmap: LiveData<Bitmap?> get() = _pictureBitmap
 
     private var _cameraProvider: ProcessCameraProvider? = null
     private var _camera: Camera? = null
@@ -60,9 +63,7 @@ abstract class AbstractCameraViewModel(
     private var aspectRatio = AspectRatio.RATIO_4_3
 
     private val cameraExecutor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
-    private val shutterSound = MediaActionSound().apply {
-        load(MediaActionSound.SHUTTER_CLICK)
-    }
+    private val shutterSound: MediaActionSound by lazy { MediaActionSound() }
 
     private val canPlaySound: Boolean
         get() = audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL
@@ -71,7 +72,15 @@ abstract class AbstractCameraViewModel(
                 audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
 
     open fun onCreate() {
-        pictureBitmap.value?.let { pictureBitmap -> _pictureBitmap.postValue(pictureBitmap) }
+        shutterSound.load(MediaActionSound.SHUTTER_CLICK)
+        Log.e("AbstractPhotoViewModel", "onCreate")
+    }
+
+    fun onDestroy() {
+        cameraExecutor.shutdown()
+        shutterSound.release()
+        cameraProvider?.unbindAll()
+        Log.e("AbstractPhotoViewModel", "onStopCamera")
     }
 
     fun onStartCamera(rotation: Int) {
@@ -80,18 +89,23 @@ abstract class AbstractCameraViewModel(
 
             buildPreview(rotation)
 
-            _cameraState.postValue(cameraState.value ?: CameraState.Live)
             _flashOn.postValue(flashOn.value ?: false)
             _isCapturingImage.postValue(isCapturingImage.value ?: false)
             _cameraFacing.postValue(cameraFacing.value ?: CameraFacing.Back)
+
+            Log.e("AbstractPhotoViewModel", "onStartCamera")
         }
     }
 
-    fun onDestroy() {
-        cameraExecutor.shutdown()
-        cameraProvider?.unbindAll()
-        shutterSound.release()
+    fun onStopCamera() {
+        imageCapture = null
+        preview = null
+        _camera = null
+        _pictureBitmap.postValue(null)
+
+        Log.e("AbstractPhotoViewModel", "onStopCamera")
     }
+
 
     private fun buildPreview(rotation: Int) {
         val resolutionSelector = ResolutionSelector.Builder()
@@ -124,12 +138,19 @@ abstract class AbstractCameraViewModel(
             .build()
     }
 
-    fun setCameraProvider(cameraProvider: ProcessCameraProvider) {
-        _cameraProvider = cameraProvider
+    fun bindCameraUseCases(viewLifecycleOwner: LifecycleOwner) {
+        cameraProvider?.unbindAll()
+
+        // Bind use cases to camera
+        val camera = cameraProvider?.bindToLifecycle(
+            viewLifecycleOwner, cameraSelector, preview, imageCapture
+        )
+
+        _camera = camera
     }
 
-    fun setCamera(camera: Camera) {
-        _camera = camera
+    fun setCameraProvider(cameraProvider: ProcessCameraProvider) {
+        _cameraProvider = cameraProvider
     }
 
     fun flipCamera() {
@@ -213,7 +234,6 @@ abstract class AbstractCameraViewModel(
                         }
 
                         _pictureBitmap.postValue(bitmap)
-                        _cameraState.postValue(CameraState.ImageCaptured)
                         _isCapturingImage.postValue(false)
 
                         image.close()
@@ -246,11 +266,5 @@ abstract class AbstractCameraViewModel(
         } else {
             vibrator.vibrate(100)
         }
-    }
-
-    abstract fun acceptCapturedPicture()
-
-    fun discardCapturedPicture() {
-        _cameraState.postValue(CameraState.Live)
     }
 }

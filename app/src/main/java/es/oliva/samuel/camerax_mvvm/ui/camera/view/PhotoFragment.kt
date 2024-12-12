@@ -1,6 +1,7 @@
-package es.oliva.samuel.camerax_mvvm.ui.common.camera
+package es.oliva.samuel.camerax_mvvm.ui.camera.view
 
 import android.os.Bundle
+import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -12,43 +13,47 @@ import android.widget.Toast
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.annotations.AfterPermissionGranted
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
+import dagger.hilt.android.AndroidEntryPoint
 import es.oliva.samuel.camerax_mvvm.R
 import es.oliva.samuel.camerax_mvvm.core.utils.Permissions
-import es.oliva.samuel.camerax_mvvm.databinding.FragmentAbstractCameraBinding
+import es.oliva.samuel.camerax_mvvm.databinding.FragmentPhotoBinding
+import es.oliva.samuel.camerax_mvvm.ui.camera.viewModel.PhotoViewModel
 
-abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCallbacks {
-    protected abstract val viewModel: AbstractCameraViewModel
+@AndroidEntryPoint
+class PhotoFragment : Fragment(), EasyPermissions.PermissionCallbacks {
+    private val viewModel: PhotoViewModel by viewModels()
 
-    protected lateinit var binding: FragmentAbstractCameraBinding
+    private lateinit var binding: FragmentPhotoBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewModel.onCreate()
 
-        startCamera()
+        Log.e("AbstractPhotoFragment", "onCreate")
+    }
+
+    override fun onDestroy() {
+        viewModel.onDestroy()
+        super.onDestroy()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        binding = FragmentAbstractCameraBinding.inflate(inflater)
+        binding = FragmentPhotoBinding.inflate(inflater)
 
+        Log.e("AbstractPhotoFragment", "onCreateView")
         binding.apply {
             btnCloseCamera.setOnClickListener { findNavController().navigateUp() }
             btnFlipCamera.setOnClickListener { viewModel.flipCamera() }
             btnToggleFlash.setOnClickListener { viewModel.toggleFlash() }
             btnShotPhoto.setOnClickListener { viewModel.takePicture() }
-
-            btnDiscardPhoto.setOnClickListener { viewModel.discardCapturedPicture() }
-            btnConfirmPhoto.setOnClickListener { viewModel.acceptCapturedPicture() }
-
-            clLive.visibility = View.GONE
-            clPreview.visibility = View.GONE
         }
 
         return binding.root
@@ -57,8 +62,9 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.e("AbstractPhotoFragment", "onViewCreated")
         viewModel.cameraFacing.observe(viewLifecycleOwner) { _ ->
-            bindCameraUserCases()
+            bindCameraUseCases()
         }
 
         viewModel.flashOn.observe(viewLifecycleOwner) { isFlashOn ->
@@ -67,24 +73,13 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
         }
 
         viewModel.pictureBitmap.observe(viewLifecycleOwner) { imageBitmap ->
-            binding.ivPage.setImageBitmap(imageBitmap)
-        }
-
-        viewModel.cameraState.observe(viewLifecycleOwner) { cameraState ->
-            cameraState?.let {
-                binding.apply {
-                    when (cameraState) {
-                        CameraState.Live -> {
-                            clLive.visibility = View.VISIBLE
-                            clPreview.visibility = View.GONE
-                        }
-
-                        CameraState.ImageCaptured -> {
-                            clLive.visibility = View.GONE
-                            clPreview.visibility = View.VISIBLE
-                        }
-                    }
-                }
+            Log.e("AbstractPhotoFragment", "PICTURE BITMAP REDIRECTING")
+            imageBitmap?.let {
+                findNavController().navigate(
+                    PhotoFragmentDirections.actionPhotoFragmentToPhotoPreviewFragment(
+                        imageBitmap
+                    )
+                )
             }
         }
 
@@ -94,6 +89,18 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
             else binding.btnShotPhoto.imageTintList =
                 ContextCompat.getColorStateList(requireContext(), R.color.white)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        startCamera()
+    }
+
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.onStopCamera()
     }
 
     override fun onRequestPermissionsResult(
@@ -130,7 +137,9 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
             cameraProviderFuture.addListener({
                 viewModel.setCameraProvider(cameraProviderFuture.get())
 
-                viewModel.onStartCamera(binding.pvCamera.display.rotation)
+                val display = binding.pvCamera.display
+                if (display != null)
+                    viewModel.onStartCamera(binding.pvCamera.display.rotation)
 
                 viewModel.preview?.apply {
                     surfaceProvider = binding.pvCamera.surfaceProvider
@@ -141,23 +150,12 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
         }
     }
 
-    private fun bindCameraUserCases() {
+    private fun bindCameraUseCases() {
         try {
-            viewModel.cameraProvider?.let { cameraProvider ->
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
+            viewModel.bindCameraUseCases(this)
 
-                // Bind use cases to camera
-                val camera = cameraProvider.bindToLifecycle(
-                    this, viewModel.cameraSelector, viewModel.preview, viewModel.imageCapture
-                )
-
-                viewModel.setCamera(camera)
-
-                setUpExposure()
-                setUpZoomTapToFocusAndExposure()
-            }
-
+            setUpExposure()
+            setUpZoomTapToFocusAndExposure()
         } catch (_: Exception) {
         }
     }
@@ -213,10 +211,5 @@ abstract class AbstractCameraFragment : Fragment(), EasyPermissions.PermissionCa
             view.performClick()
             true
         }
-    }
-
-    override fun onDestroy() {
-        viewModel.onDestroy()
-        super.onDestroy()
     }
 }

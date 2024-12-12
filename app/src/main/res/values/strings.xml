@@ -14,4 +14,6 @@
     <string name="camera_permission_granted">Camera permission granted!</string>
     <string name="camera_permission_request_title">Camera permission required</string>
     <string name="camera_permission_request">Camera permission is required for the app to function properly. Please open the app settings to modify permissions.</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.common.camera.view.AbstractPhotoFragment">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/constraint_guideline_horizontal_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.95" />
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/pvCamera"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:scaleType="fitCenter" />
+
+    <es.oliva.samuel.camerax_mvvm.ui.common.components.FocusCircleView
+        android:id="@+id/focusCircleView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/pvCamera"
+        app:layout_constraintEnd_toEndOf="@+id/pvCamera"
+        app:layout_constraintStart_toStartOf="@+id/pvCamera"
+        app:layout_constraintTop_toTopOf="@+id/pvCamera" />
+
+    <es.oliva.samuel.camerax_mvvm.ui.common.components.VerticalSeekBar
+        android:id="@+id/sbExposure"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginVertical="50dp"
+        android:max="100"
+        android:progress="50"
+        app:layout_constraintBottom_toTopOf="@id/btnFlipCamera"
+        app:layout_constraintLeft_toLeftOf="@id/btnToggleFlash"
+        app:layout_constraintRight_toRightOf="@id/btnToggleFlash"
+        app:layout_constraintTop_toBottomOf="@id/btnToggleFlash" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnCloseCamera"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_circular_semi_black"
+        android:padding="10dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_close"
+        app:tint="@color/white" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnToggleFlash"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_circular_semi_black"
+        android:padding="10dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_flash_off"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnFlipCamera"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_circular_semi_black"
+        android:padding="10dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_flip_camera"
+        app:layout_constraintBottom_toBottomOf="@+id/constraint_guideline_horizontal_bottom"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnShotPhoto"
+        android:layout_width="70dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_circular_transparent"
+        android:padding="5dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="@id/constraint_guideline_horizontal_bottom"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_camera"
+        app:tint="@color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

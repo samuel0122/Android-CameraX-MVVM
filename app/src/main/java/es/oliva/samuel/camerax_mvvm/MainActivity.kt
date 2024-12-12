@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.cameraFragment, R.id.videoFragment -> supportActionBar?.hide()
+                R.id.photoFragment, R.id.photoPreviewFragment, R.id.videoFragment, R.id.videoPreviewFragment -> supportActionBar?.hide()
                 else -> supportActionBar?.show()
             }
         }

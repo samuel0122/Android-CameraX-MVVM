@@ -10,20 +10,65 @@
         android:label="CameraX MVVM"
         tools:layout="@layout/fragment_main_page">
         <action
-            android:id="@+id/action_mainPageFragment_to_cameraFragment"
-            app:destination="@id/cameraFragment" />
-        <action
-            android:id="@+id/action_mainPageFragment_to_videoFragment"
-            app:destination="@id/videoFragment" />
+            android:id="@+id/action_mainPageFragment_to_openCameraOptionsDialog"
+            app:destination="@id/openCameraOptionsDialog" />
     </fragment>
     <fragment
-        android:id="@+id/cameraFragment"
-        android:name="es.oliva.samuel.camerax_mvvm.ui.camera.view.CameraFragment"
+        android:id="@+id/photoFragment"
+        android:name="es.oliva.samuel.camerax_mvvm.ui.camera.view.PhotoFragment"
         android:label="fragment_camera"
-        tools:layout="@layout/fragment_abstract_camera" />
+        tools:layout="@layout/fragment_photo">
+        <action
+            android:id="@+id/action_photoFragment_to_photoPreviewFragment"
+            app:destination="@id/photoPreviewFragment" />
+    </fragment>
     <fragment
         android:id="@+id/videoFragment"
         android:name="es.oliva.samuel.camerax_mvvm.ui.camera.view.VideoFragment"
         android:label="fragment_video"
-        tools:layout="@layout/fragment_abstract_video" />
+        tools:layout="@layout/fragment_video">
+        <action
+            android:id="@+id/action_videoFragment_to_videoPreviewFragment"
+            app:destination="@id/videoPreviewFragment" />
+    </fragment>
+    <dialog
+        android:id="@+id/openCameraOptionsDialog"
+        android:name="es.oliva.samuel.camerax_mvvm.ui.mainPage.view.OpenCameraOptionsDialog"
+        android:label="OpenCameraOptionsDialog"
+        tools:layout="@layout/dialog_open_camera_options">
+        <action
+            android:id="@+id/action_openCameraOptionsDialog_to_photoFragment"
+            app:destination="@id/photoFragment" />
+        <action
+            android:id="@+id/action_openCameraOptionsDialog_to_videoFragment"
+            app:destination="@id/videoFragment" />
+    </dialog>
+    <fragment
+        android:id="@+id/photoPreviewFragment"
+        android:name="es.oliva.samuel.camerax_mvvm.ui.preview.view.PhotoPreviewFragment"
+        android:label="fragment_photo_preview"
+        tools:layout="@layout/fragment_photo_preview">
+        <argument
+            android:name="photo"
+            app:argType="android.graphics.Bitmap" />
+        <action
+            android:id="@+id/action_photoPreviewFragment_to_mainPageFragment"
+            app:destination="@id/mainPageFragment"
+            app:popUpTo="@id/mainPageFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/videoPreviewFragment"
+        android:name="es.oliva.samuel.camerax_mvvm.ui.preview.view.VideoPreviewFragment"
+        android:label="fragment_video_preview"
+        tools:layout="@layout/fragment_video_preview">
+        <action
+            android:id="@+id/action_videoPreviewFragment_to_mainPageFragment"
+            app:destination="@id/mainPageFragment"
+            app:popUpTo="@id/mainPageFragment"
+            app:popUpToInclusive="true" />
+        <argument
+            android:name="videoUri"
+            app:argType="string" />
+    </fragment>
 </navigation>
