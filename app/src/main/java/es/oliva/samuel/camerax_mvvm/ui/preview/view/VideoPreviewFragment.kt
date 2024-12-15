@@ -38,6 +38,10 @@ class VideoPreviewFragment : Fragment() {
             btnConfirmPhoto.setOnClickListener { viewModel.acceptRecordedVideo() }
             btnDiscardPhoto.setOnClickListener { viewModel.rejectRecordedVideo() }
 
+            val showButtons = args.showActionButtons
+            btnConfirmPhoto.visibility = if (showButtons) View.VISIBLE else View.GONE
+            btnDiscardPhoto.visibility = if (showButtons) View.VISIBLE else View.GONE
+
             vvPreview.player = ExoPlayer.Builder(requireContext()).build()
         }
 

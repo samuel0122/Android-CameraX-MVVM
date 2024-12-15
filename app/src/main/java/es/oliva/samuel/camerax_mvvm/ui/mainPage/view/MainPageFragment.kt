@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import es.oliva.samuel.camerax_mvvm.R
+import es.oliva.samuel.camerax_mvvm.core.eMediaType
 import es.oliva.samuel.camerax_mvvm.databinding.FragmentMainPageBinding
 import es.oliva.samuel.camerax_mvvm.ui.mainPage.viewModel.MainPageViewModel
 
@@ -35,6 +36,28 @@ class MainPageFragment : Fragment() {
             )
         }
 
+        binding.ivThumbnail.setOnClickListener {
+            viewModel.lastSavedMedia.value?.let { lastSavedMediaItem ->
+                when (lastSavedMediaItem.mediaType) {
+                    eMediaType.Video -> {
+                        findNavController().navigate(
+                            MainPageFragmentDirections.actionMainPageFragmentToVideoPreviewFragment(
+                                videoUri = lastSavedMediaItem.mediaUri.toString()
+                            )
+                        )
+                    }
+
+                    eMediaType.Picture -> {
+                        findNavController().navigate(
+                            MainPageFragmentDirections.actionMainPageFragmentToPhotoPreviewFragment(
+                                photo = viewModel.lastSavedMediaThumbnail.value!!
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
         binding.btnGitHub.setOnClickListener {}
 
         return binding.root
@@ -46,6 +69,15 @@ class MainPageFragment : Fragment() {
         viewModel.lastSavedMediaThumbnail.observe(viewLifecycleOwner) { bitmap ->
             if (bitmap != null) binding.ivThumbnail.setImageBitmap(bitmap)
             else binding.ivThumbnail.setImageResource(R.drawable.ic_launcher_background)
+        }
+
+        viewModel.lastSavedMedia.observe(viewLifecycleOwner) { savedMedia ->
+            savedMedia?.let {
+                when (savedMedia.mediaType) {
+                    eMediaType.Video -> binding.ivVideoPlayIcon.visibility = View.VISIBLE
+                    eMediaType.Picture -> binding.ivVideoPlayIcon.visibility = View.GONE
+                }
+            }
         }
     }
 }

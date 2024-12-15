@@ -9,7 +9,13 @@ import javax.inject.Inject
 class GetLastSavedMediaThumbnailUseCase @Inject constructor(
     private val mediaRepository: MediaRepository
 ) {
-    operator fun invoke(): Flow<Bitmap?> = mediaRepository.getLastSavedMediaUri().map { uri ->
-        uri?.let { mediaRepository.getMediaThumbnail(uri) }
-    }
+    operator fun invoke(): Flow<Bitmap?> = mediaRepository.getLastSavedMediaItem()
+        .map { mediaItem ->
+            mediaItem?.let {
+                mediaRepository.getMediaThumbnail(
+                    mediaUri = mediaItem.mediaUri,
+                    mediaType = mediaItem.mediaType
+                )
+            }
+        }
 }

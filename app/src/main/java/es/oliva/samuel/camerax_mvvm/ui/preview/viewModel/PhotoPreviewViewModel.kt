@@ -6,13 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.oliva.samuel.camerax_mvvm.domain.SaveImageUseCase
+import es.oliva.samuel.camerax_mvvm.domain.SavePictureUseCase
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PhotoPreviewViewModel @Inject constructor(
-    private val saveImageUseCase: SaveImageUseCase
+    private val savePictureUseCase: SavePictureUseCase
 ) : ViewModel() {
     private val _photoBitmap = MutableLiveData<Bitmap>()
     private val _didInsertPhoto = MutableLiveData<Boolean>()
@@ -31,7 +31,7 @@ class PhotoPreviewViewModel @Inject constructor(
     fun acceptCapturedPicture() {
         viewModelScope.launch {
             photoBitmap.value?.let { photoBitmap ->
-                if (saveImageUseCase(photoBitmap)) _didInsertPhoto.postValue(true)
+                if (savePictureUseCase(photoBitmap)) _didInsertPhoto.postValue(true)
             }
         }
     }

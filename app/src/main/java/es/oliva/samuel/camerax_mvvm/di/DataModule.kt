@@ -6,8 +6,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.oliva.samuel.camerax_mvvm.data.dataPreferences.DataPreferencesDao
 import es.oliva.samuel.camerax_mvvm.data.dataPreferences.DataStorePreferencesDao
-import es.oliva.samuel.camerax_mvvm.data.mediaStorage.ImagesStorageDao
 import es.oliva.samuel.camerax_mvvm.data.mediaStorage.MediaStorageDao
+import es.oliva.samuel.camerax_mvvm.data.mediaStorage.PicturesStorageDao
 import javax.inject.Singleton
 
 @Module
@@ -23,7 +23,7 @@ object DataModule {
     @Provides
     @Singleton
     fun provideMediaStorageDao(
-        imagesStorageDao: ImagesStorageDao
-    ): MediaStorageDao = imagesStorageDao
+        picturesStorageDao: PicturesStorageDao
+    ): MediaStorageDao = picturesStorageDao
 
 }

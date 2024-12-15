@@ -12,6 +12,20 @@
         <action
             android:id="@+id/action_mainPageFragment_to_openCameraOptionsDialog"
             app:destination="@id/openCameraOptionsDialog" />
+        <action
+            android:id="@+id/action_mainPageFragment_to_photoPreviewFragment"
+            app:destination="@id/photoPreviewFragment">
+            <argument
+                android:name="showActionButtons"
+                android:defaultValue="false" />
+        </action>
+        <action
+            android:id="@+id/action_mainPageFragment_to_videoPreviewFragment"
+            app:destination="@id/videoPreviewFragment">
+            <argument
+                android:name="showActionButtons"
+                android:defaultValue="false" />
+        </action>
     </fragment>
     <fragment
         android:id="@+id/photoFragment"
@@ -51,6 +65,10 @@
         <argument
             android:name="photo"
             app:argType="android.graphics.Bitmap" />
+        <argument
+            android:name="showActionButtons"
+            android:defaultValue="true"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_photoPreviewFragment_to_mainPageFragment"
             app:destination="@id/mainPageFragment"
@@ -70,5 +88,9 @@
         <argument
             android:name="videoUri"
             app:argType="string" />
+        <argument
+            android:name="showActionButtons"
+            android:defaultValue="true"
+            app:argType="boolean" />
     </fragment>
 </navigation>

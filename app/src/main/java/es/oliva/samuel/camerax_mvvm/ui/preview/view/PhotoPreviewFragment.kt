@@ -34,6 +34,10 @@ class PhotoPreviewFragment : Fragment() {
         binding.apply {
             btnConfirmPhoto.setOnClickListener { viewModel.acceptCapturedPicture() }
             btnDiscardPhoto.setOnClickListener { viewModel.rejectCapturedPicture() }
+
+            val showButtons = args.showActionButtons
+            btnConfirmPhoto.visibility = if (showButtons) View.VISIBLE else View.GONE
+            btnDiscardPhoto.visibility = if (showButtons) View.VISIBLE else View.GONE
         }
 
         return binding.root
