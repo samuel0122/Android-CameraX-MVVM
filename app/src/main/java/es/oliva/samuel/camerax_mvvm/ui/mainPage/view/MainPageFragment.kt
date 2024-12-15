@@ -1,5 +1,7 @@
 package es.oliva.samuel.camerax_mvvm.ui.mainPage.view
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -30,35 +32,45 @@ class MainPageFragment : Fragment() {
     ): View {
         binding = FragmentMainPageBinding.inflate(inflater)
 
-        binding.btnOpenCamera.setOnClickListener {
-            findNavController().navigate(
-                MainPageFragmentDirections.actionMainPageFragmentToOpenCameraOptionsDialog()
-            )
-        }
+        binding.apply {
+            btnOpenCamera.setOnClickListener {
+                findNavController().navigate(
+                    MainPageFragmentDirections.actionMainPageFragmentToOpenCameraOptionsDialog()
+                )
+            }
 
-        binding.ivThumbnail.setOnClickListener {
-            viewModel.lastSavedMedia.value?.let { lastSavedMediaItem ->
-                when (lastSavedMediaItem.mediaType) {
-                    eMediaType.Video -> {
-                        findNavController().navigate(
-                            MainPageFragmentDirections.actionMainPageFragmentToVideoPreviewFragment(
-                                videoUri = lastSavedMediaItem.mediaUri.toString()
-                            )
-                        )
-                    }
+            btnGitHub.setOnClickListener {
+                val url = "https://github.com/samuel0122/Android-CameraX-MVVM"
 
-                    eMediaType.Picture -> {
-                        findNavController().navigate(
-                            MainPageFragmentDirections.actionMainPageFragmentToPhotoPreviewFragment(
-                                photo = viewModel.lastSavedMediaThumbnail.value!!
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(url)
+                }
+
+                startActivity(intent)
+            }
+
+            ivThumbnail.setOnClickListener {
+                viewModel.lastSavedMedia.value?.let { lastSavedMediaItem ->
+                    when (lastSavedMediaItem.mediaType) {
+                        eMediaType.Video -> {
+                            findNavController().navigate(
+                                MainPageFragmentDirections.actionMainPageFragmentToVideoPreviewFragment(
+                                    videoUri = lastSavedMediaItem.mediaUri.toString()
+                                )
                             )
-                        )
+                        }
+
+                        eMediaType.Picture -> {
+                            findNavController().navigate(
+                                MainPageFragmentDirections.actionMainPageFragmentToPhotoPreviewFragment(
+                                    photo = viewModel.lastSavedMediaThumbnail.value!!
+                                )
+                            )
+                        }
                     }
                 }
             }
         }
-
-        binding.btnGitHub.setOnClickListener {}
 
         return binding.root
     }
